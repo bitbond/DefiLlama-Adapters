@@ -6,7 +6,6 @@
     "blast": "blast",
     "bsc": "bsc",
     "ethereum": "ethereum",
-    "fantom": "fantom",
     "optimism": "optimism",
     "polygon": "polygon",
     "polygon_zkevm": "polygon-zkevm"
