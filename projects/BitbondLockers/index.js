@@ -31,6 +31,32 @@ async function fetchLockers(networkName) {
   return contracts;
 }
 
+async function fetchSalesLockers(networkName) {
+  let contracts = [];
+  let currentPage = 1;
+  let isLastPage = false;
+
+  while (!isLastPage) {
+    const response = await get(
+      `${metisBaseUrl}/${networkName}/token-sales-lockers?page=${currentPage}&perPage=100`,
+      {
+        headers: {
+          Accept: "application/json",
+          "User-Agent": getRandomUserAgent(),
+        }
+      }
+    );
+
+    contracts.push(...response.meta.contracts);
+
+    const pagination = response.meta.pagination;
+    isLastPage = pagination ? pagination.isLastPage : true;
+    currentPage = pagination ? pagination.nextPage : currentPage;
+  }
+
+  return contracts;
+}
+
 function getRandomUserAgent() {
   const randomIndex = Math.floor(Math.random() * userAgents.length);
   return userAgents[randomIndex];
@@ -38,9 +64,13 @@ function getRandomUserAgent() {
 
 async function tvl(api) {
   const networkName = chainMapping[api.chain];
-  const lockers = await getConfig(`bitbond/locker/${networkName}`, undefined, {
+  const lockers = await getConfig(`bitbond/lockers/${networkName}`, undefined, {
     fetcher: () => fetchLockers(networkName)
   });
+  const salesLockers = await getConfig(`bitbond/sales-lockers/${networkName}`, undefined, {
+    fetcher: () => fetchSalesLockers(networkName)
+  });
+  lockers.push(...salesLockers);
   const tokens = lockers.map((locker) => locker.tokenAddress);
   const symbols  = await api.multiCall({  abi: 'string:symbol', calls: tokens, permitFailure: true, })
   const tokensAndOwners = []
